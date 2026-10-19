@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kalorien-Tracker</title>
+<meta name="theme-color" content="#0f1012">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kalorien">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#0f1012; --card:#18191c; --card2:#202226; --line:#2a2c31;
+  --text:#f1f1f2; --muted:#8d9098; --faint:#5c5f66;
+  --kcal:#ff8a3d; --p:#4fc3f7; --c:#ffd54f; --f:#ef6fa0; --ok:#7bd88f; --over:#ff5d5d;
+  --r:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg)}
+body{color:var(--text);font:15px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
+  padding:calc(env(safe-area-inset-top) + 8px) 16px calc(env(safe-area-inset-bottom) + 90px);max-width:560px;margin:0 auto;
+  font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0 14px}
+.datebox{text-align:center;flex:1}
+.datebox .d{font-size:19px;font-weight:700;letter-spacing:-.2px}
+.datebox .s{font-size:12px;color:var(--muted)}
+.nav{width:42px;height:42px;border-radius:50%;background:var(--card);display:grid;place-items:center;font-size:20px}
+.nav:disabled{opacity:.3}
+.card{background:var(--card);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.hero{display:flex;align-items:center;gap:18px}
+.ring{position:relative;width:132px;height:132px;flex:none}
+.ring svg{transform:rotate(-90deg)}
+.ring .in{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.ring .big{font-size:28px;font-weight:800;letter-spacing:-.5px}
+.ring .small{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+.heroinfo{flex:1;min-width:0}
+.heroinfo .row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line);font-size:14px}
+.heroinfo .row:last-child{border:0}
+.heroinfo .row span:first-child{color:var(--muted)}
+.macros{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.m{background:var(--card2);border-radius:14px;padding:12px}
+.m .lbl{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.m .lbl i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.m .val{font-size:20px;font-weight:700;margin:4px 0 8px}
+.m .val small{font-size:12px;color:var(--muted);font-weight:500}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar>div{height:100%;border-radius:3px}
+h2{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-weight:600;margin:20px 4px 8px;display:flex;justify-content:space-between}
+h2 b{color:var(--text);font-weight:600;letter-spacing:0;text-transform:none}
+.meal{background:var(--card);border-radius:var(--r);overflow:hidden;margin-bottom:12px}
+.meal .mh{display:flex;justify-content:space-between;padding:12px 16px;background:var(--card2);font-weight:600;font-size:14px}
+.meal .mh span:last-child{color:var(--kcal)}
+.item{padding:11px 16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:10px}
+.item:first-of-type{border-top:0}
+.item .n{font-weight:500}
+.item .q{font-size:12px;color:var(--muted);margin-top:2px}
+.item .q b{font-weight:500}
+.item .k{text-align:right;flex:none}
+.item .k .kc{font-weight:700}
+.item .k .pcf{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap}
+.pcf .p{color:var(--p)}.pcf .c{color:var(--c)}.pcf .f{color:var(--f)}
+.empty{text-align:center;color:var(--muted);padding:36px 16px}
+.empty .e{font-size:36px;margin-bottom:8px}
+.week{display:flex;align-items:flex-end;gap:8px;height:170px;padding-top:18px;position:relative}
+.wcol{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+.wbar{width:100%;border-radius:8px 8px 4px 4px;background:var(--kcal);min-height:3px;position:relative}
+.wbar.zero{background:var(--line)}
+.wbar.sel{outline:2px solid var(--text);outline-offset:2px}
+.wval{font-size:10px;color:var(--muted)}
+.wday{font-size:11px;color:var(--muted)}
+.goal-line{position:absolute;left:0;right:0;border-top:1px dashed var(--faint);pointer-events:none}
+.goal-line span{position:absolute;right:0;top:-16px;font-size:10px;color:var(--faint)}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stat{background:var(--card2);border-radius:14px;padding:12px}
+.stat .lbl{font-size:12px;color:var(--muted)}
+.stat .val{font-size:20px;font-weight:700;margin-top:2px}
+.prod{padding:12px 16px;border-top:1px solid var(--line)}
+.prod:first-child{border-top:0}
+.prod .n{font-weight:600}
+.prod .b{font-size:12px;color:var(--muted)}
+.prod .v{font-size:12px;margin-top:4px;color:var(--muted)}
+.search{width:100%;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 14px;color:var(--text);font:inherit;margin-bottom:12px;outline:none}
+.search:focus{border-color:var(--faint)}
+.tabs{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:4px;
+  padding:8px 16px calc(env(safe-area-inset-bottom) + 8px);background:rgba(15,16,18,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line)}
+.tabs button{flex:1;max-width:170px;padding:10px 6px;border-radius:12px;font-size:13px;color:var(--muted);font-weight:600}
+.tabs button.on{background:var(--card2);color:var(--text)}
+.tabs button .ic{display:block;font-size:18px;margin-bottom:2px}
+.meta{font-size:11px;color:var(--faint);text-align:center;margin-top:18px}
+.meta button{color:var(--muted);text-decoration:underline}
+.note{background:var(--card2);border-radius:12px;padding:10px 12px;font-size:13px;color:var(--muted);margin-top:10px}
+.err{background:#3a1d1d;color:#ffb4b4;border-radius:12px;padding:12px;font-size:13px;margin-bottom:12px}
+.lock{position:fixed;inset:0;z-index:20;background:var(--bg);display:grid;place-items:center;padding:24px}
+.lockbox{width:100%;max-width:340px;text-align:center}
+.lockic{font-size:40px;margin-bottom:10px}
+.lockt{font-size:20px;font-weight:700}
+.locks{font-size:13px;color:var(--muted);margin:6px 0 20px}
+.lockbox input{width:100%;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;color:var(--text);font:16px ui-monospace,Menlo,monospace;text-align:center;letter-spacing:1px;outline:none}
+.lockbox input:focus{border-color:var(--kcal)}
+.lockbox button{width:100%;margin-top:10px;background:var(--kcal);color:#1a0d03;font-weight:700;border-radius:12px;padding:14px}
+.lockmsg{font-size:13px;color:var(--muted);margin-top:12px;min-height:18px}
+.hidden{display:none !important}
+</style>
+</head>
+<body>
+
+<header>
+  <button class="nav" id="prev" aria-label="Vorheriger Tag">‹</button>
+  <div class="datebox" id="dateBox"><div class="d" id="dateMain">…</div><div class="s" id="dateSub"></div></div>
+  <button class="nav" id="next" aria-label="Nächster Tag">›</button>
+</header>
+
+<div id="err" class="err hidden"></div>
+
+<div id="lock" class="lock hidden">
+  <form id="lockForm" class="lockbox" autocomplete="on">
+    <div class="lockic">🔒</div>
+    <div class="lockt">Daten sind verschlüsselt</div>
+    <div class="locks">Passwort einmal eingeben, dieses Gerät merkt es sich.</div>
+    <input id="pw" type="password" name="password" autocomplete="current-password" autocapitalize="none" spellcheck="false" placeholder="xxxx-xxxx-xxxx-xxxx">
+    <button type="submit">Entsperren</button>
+    <div id="lockMsg" class="lockmsg"></div>
+  </form>
+</div>
+
+<!-- TAG -->
+<section id="v-tag">
+  <div class="card hero">
+    <div class="ring">
+      <svg width="132" height="132" viewBox="0 0 132 132">
+        <circle cx="66" cy="66" r="56" fill="none" stroke="var(--line)" stroke-width="12"/>
+        <circle id="ringFg" cx="66" cy="66" r="56" fill="none" stroke="var(--kcal)" stroke-width="12" stroke-linecap="round" stroke-dasharray="351.86" stroke-dashoffset="351.86" style="transition:stroke-dashoffset .5s"/>
+      </svg>
+      <div class="in"><div class="big" id="kcalBig">0</div><div class="small">kcal</div></div>
+    </div>
+    <div class="heroinfo">
+      <div class="row"><span>Ziel</span><span id="kGoal">–</span></div>
+      <div class="row"><span>Gegessen</span><span id="kEaten">0</span></div>
+      <div class="row"><span id="kRestLbl">Übrig</span><span id="kRest">–</span></div>
+    </div>
+  </div>
+  <div class="macros" id="macros"></div>
+  <div id="meals"></div>
+  <div id="dayNote"></div>
+</section>
+
+<!-- WOCHE -->
+<section id="v-woche" class="hidden">
+  <div class="card">
+    <h2 style="margin-top:0">7 Tage <b id="wRange"></b></h2>
+    <div class="week" id="week"></div>
+  </div>
+  <h2>Ø pro getracktem Tag <b id="wDays"></b></h2>
+  <div class="stats" id="wStats"></div>
+</section>
+
+<!-- PRODUKTE -->
+<section id="v-produkte" class="hidden">
+  <input class="search" id="q" placeholder="Produkt suchen …" autocomplete="off">
+  <div class="meal" id="prodList"></div>
+</section>
+
+<div class="meta" id="meta"></div>
+
+<nav class="tabs">
+  <button data-v="tag" class="on"><span class="ic">◐</span>Tag</button>
+  <button data-v="woche"><span class="ic">▥</span>Woche</button>
+  <button data-v="produkte"><span class="ic">☰</span>Produkte</button>
+</nav>
+
+<script>
+const WD=["So","Mo","Di","Mi","Do","Fr","Sa"];
+let DATA={ziele:{},produkte:{},eintraege:[]};
+let cur=today(), view="tag", loadedAt=null;
+
+function today(){const d=new Date();return iso(d)}
+function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function parse(s){const[y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)}
+function addDays(s,n){const d=parse(s);d.setDate(d.getDate()+n);return iso(d)}
+const r0=x=>Math.round(x||0);
+const r1=x=>{const v=Math.round((x||0)*10)/10;return v.toLocaleString("de-AT")};
+const fmt=x=>r0(x).toLocaleString("de-AT");
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+const PW_KEY="kt_pw";
+const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
+const lsSet=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}};
+let PW=lsGet(PW_KEY), ENC=null;
+const ub64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function decrypt(enc,pw){
+  const base=await crypto.subtle.importKey("raw",new TextEncoder().encode(pw),"PBKDF2",false,["deriveKey"]);
+  const key=await crypto.subtle.deriveKey({name:"PBKDF2",salt:ub64(enc.salt),iterations:enc.iter,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["decrypt"]);
+  const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:ub64(enc.iv)},key,ub64(enc.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+function showLock(msg){
+  const l=document.getElementById("lock");l.classList.remove("hidden");
+  document.getElementById("lockMsg").textContent=msg||"";
+  setTimeout(()=>document.getElementById("pw").focus(),50);
+}
+document.getElementById("lockForm").onsubmit=async ev=>{
+  ev.preventDefault();
+  const v=document.getElementById("pw").value.trim().toLowerCase();
+  if(!v)return;
+  document.getElementById("lockMsg").textContent="Entschlüssle …";
+  try{DATA=await decrypt(ENC,v);PW=v;lsSet(PW_KEY,v);document.getElementById("lock").classList.add("hidden");document.getElementById("pw").value="";finishLoad()}
+  catch(e){document.getElementById("lockMsg").textContent="Falsches Passwort."}
+};
+function lockNow(){PW=null;lsSet(PW_KEY,null);DATA={ziele:{},produkte:{},eintraege:[]};render();showLock()}
+function finishLoad(){
+  DATA.eintraege=DATA.eintraege||[];DATA.produkte=DATA.produkte||{};DATA.ziele=DATA.ziele||{};
+  loadedAt=new Date();document.getElementById("err").classList.add("hidden");render();
+}
+
+async function load(){
+  try{
+    const res=await fetch("data.enc.json?t="+Date.now(),{cache:"no-store"});
+    if(!res.ok) throw new Error("HTTP "+res.status);
+    ENC=await res.json();
+    if(!PW){render();showLock();return}
+    try{DATA=await decrypt(ENC,PW)}catch(e){lsSet(PW_KEY,null);PW=null;render();showLock("Gespeichertes Passwort passt nicht mehr.");return}
+    DATA.eintraege=DATA.eintraege||[];DATA.produkte=DATA.produkte||{};DATA.ziele=DATA.ziele||{};
+    loadedAt=new Date();
+    document.getElementById("err").classList.add("hidden");
+  }catch(e){
+    const el=document.getElementById("err");el.textContent="Daten konnten nicht geladen werden ("+e.message+").";el.classList.remove("hidden");
+  }
+  render();
+}
+
+function sum(list){return list.reduce((a,e)=>({kcal:a.kcal+(+e.kcal||0),protein:a.protein+(+e.protein||0),carbs:a.carbs+(+e.carbs||0),fett:a.fett+(+e.fett||0)}),{kcal:0,protein:0,carbs:0,fett:0})}
+const dayEntries=d=>DATA.eintraege.filter(e=>e.datum===d);
+
+function render(){
+  const d=parse(cur), t=today();
+  const rel=cur===t?"Heute":cur===addDays(t,-1)?"Gestern":cur===addDays(t,1)?"Morgen":null;
+  document.getElementById("dateMain").textContent=rel||d.toLocaleDateString("de-AT",{weekday:"long"});
+  document.getElementById("dateSub").textContent=d.toLocaleDateString("de-AT",{weekday:rel?"long":undefined,day:"numeric",month:"long",year:"numeric"});
+  document.getElementById("next").disabled=cur>=t;
+  ["tag","woche","produkte"].forEach(v=>document.getElementById("v-"+v).classList.toggle("hidden",v!==view));
+  document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.v===view));
+  document.querySelector("header").style.visibility=view==="produkte"?"hidden":"visible";
+  if(view==="tag")renderDay(); else if(view==="woche")renderWeek(); else renderProducts();
+  const n=DATA.eintraege.length;
+  document.getElementById("meta").innerHTML=(loadedAt?"Geladen "+loadedAt.toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"})+" · ":"")+n+" Einträge gesamt · <button id='reload'>Aktualisieren</button> · <button id='lockBtn'>Sperren</button>";
+  document.getElementById("reload").onclick=load;
+  document.getElementById("lockBtn").onclick=lockNow;
+}
+
+function renderDay(){
+  const list=dayEntries(cur), s=sum(list), z=DATA.ziele;
+  const goal=+z.kcal||0;
+  document.getElementById("kcalBig").textContent=fmt(s.kcal);
+  document.getElementById("kGoal").textContent=goal?fmt(goal):"–";
+  document.getElementById("kEaten").textContent=fmt(s.kcal);
+  const rest=goal-s.kcal;
+  document.getElementById("kRestLbl").textContent=goal&&rest<0?"Drüber":"Übrig";
+  const kr=document.getElementById("kRest");
+  kr.textContent=goal?fmt(Math.abs(rest)):"–";
+  kr.style.color=goal&&rest<0?"var(--over)":goal&&s.kcal>=goal*0.95?"var(--ok)":"";
+  const C=351.86, pct=goal?Math.min(s.kcal/goal,1):0;
+  const fg=document.getElementById("ringFg");
+  fg.style.strokeDashoffset=C*(1-pct);
+  fg.style.stroke=goal&&s.kcal>goal*1.05?"var(--over)":"var(--kcal)";
+
+  const M=[["protein","Protein","--p"],["carbs","Carbs","--c"],["fett","Fett","--f"]];
+  document.getElementById("macros").innerHTML=M.map(([k,l,c])=>{
+    const g=+z[k]||0, v=s[k];
+    return `<div class="m"><div class="lbl"><i style="background:var(${c})"></i>${l}</div>
+      <div class="val">${r0(v)}<small> ${g?"/ "+g+" g":"g"}</small></div>
+      <div class="bar"><div style="width:${g?Math.min(v/g*100,100):0}%;background:var(${c})"></div></div></div>`}).join("");
+
+  const box=document.getElementById("meals");
+  if(!list.length){box.innerHTML=`<div class="card empty"><div class="e">🍽️</div>Noch nichts eingetragen.<br><span style="font-size:13px">Schick Claude, was du gegessen hast.</span></div>`;document.getElementById("dayNote").innerHTML="";return}
+  {
+    const g=list.slice().sort((a,b)=>(a.zeit||"99").localeCompare(b.zeit||"99")||String(a.id).localeCompare(String(b.id)));
+    box.innerHTML=`<div class="meal"><div class="mh"><span>Gegessen · ${g.length}</span><span>${fmt(s.kcal)} kcal</span></div>`+
+      g.map(e=>`<div class="item"><div><div class="n">${esc(e.name)}</div>
+        <div class="q">${e.menge!=null?`<b>${r1(e.menge)} ${esc(e.einheit||"g")}</b>`:""}${e.zeit?" · "+esc(e.zeit):""}${e.notiz?" · "+esc(e.notiz):""}</div></div>
+        <div class="k"><div class="kc">${fmt(e.kcal)} kcal</div>
+        <div class="pcf"><span class="p">P ${r1(e.protein)}</span> · <span class="c">C ${r1(e.carbs)}</span> · <span class="f">F ${r1(e.fett)}</span></div></div></div>`).join("")+`</div>`;
+  }
+  const kc=s.protein*4+s.carbs*4+s.fett*9;
+  document.getElementById("dayNote").innerHTML=kc?`<div class="note">Kalorienanteil: Protein ${r0(s.protein*4/kc*100)} % · Carbs ${r0(s.carbs*4/kc*100)} % · Fett ${r0(s.fett*9/kc*100)} %</div>`:"";
+}
+
+function renderWeek(){
+  const days=[...Array(7)].map((_,i)=>addDays(cur,i-6));
+  const sums=days.map(d=>({d,s:sum(dayEntries(d)),n:dayEntries(d).length}));
+  const goal=+DATA.ziele.kcal||0;
+  const max=Math.max(goal,...sums.map(x=>x.s.kcal),1)*1.08;
+  const H=120;
+  document.getElementById("wRange").textContent=parse(days[0]).toLocaleDateString("de-AT",{day:"numeric",month:"short"})+" – "+parse(days[6]).toLocaleDateString("de-AT",{day:"numeric",month:"short"});
+  document.getElementById("week").innerHTML=(goal?`<div class="goal-line" style="bottom:${goal/max*H+21}px"><span>Ziel ${fmt(goal)}</span></div>`:"")+
+    sums.map(x=>`<div class="wcol" data-d="${x.d}"><div class="wval">${x.n?fmt(x.s.kcal):""}</div>
+      <div class="wbar ${x.n?"":"zero"} ${x.d===cur?"sel":""}" style="height:${x.n?Math.max(x.s.kcal/max*H,3):3}px;${goal&&x.s.kcal>goal*1.05?"background:var(--over)":""}"></div>
+      <div class="wday">${WD[parse(x.d).getDay()]}</div></div>`).join("");
+  document.querySelectorAll(".wcol").forEach(c=>c.onclick=()=>{cur=c.dataset.d;view="tag";render()});
+  const tracked=sums.filter(x=>x.n);
+  const n=tracked.length||1, tot=sum(tracked.map(x=>x.s));
+  document.getElementById("wDays").textContent=tracked.length+" von 7 Tagen";
+  document.getElementById("wStats").innerHTML=[["Kalorien",fmt(tot.kcal/n)+" kcal","--kcal"],["Protein",r0(tot.protein/n)+" g","--p"],["Carbs",r0(tot.carbs/n)+" g","--c"],["Fett",r0(tot.fett/n)+" g","--f"]]
+    .map(([l,v,c])=>`<div class="stat"><div class="lbl">${l}</div><div class="val" style="color:var(${c})">${tracked.length?v:"–"}</div></div>`).join("");
+}
+
+function renderProducts(){
+  const q=document.getElementById("q").value.trim().toLowerCase();
+  const items=Object.entries(DATA.produkte).filter(([id,p])=>!q||(p.name+" "+(p.marke||"")).toLowerCase().includes(q))
+    .sort((a,b)=>a[1].name.localeCompare(b[1].name,"de"));
+  const el=document.getElementById("prodList");
+  if(!items.length){el.innerHTML=`<div class="empty">${q?"Kein Treffer.":"Noch keine Produkte gespeichert.<br><span style='font-size:13px'>Wenn du Claude ein Nährwert-Etikett schickst, landet das Produkt hier.</span>"}</div>`;return}
+  el.innerHTML=items.map(([id,p])=>`<div class="prod"><div class="n">${esc(p.name)}</div>${p.marke?`<div class="b">${esc(p.marke)}</div>`:""}
+    <div class="v">pro ${esc(p.basis||"100 g")}: <b style="color:var(--kcal)">${fmt(p.kcal)} kcal</b> · <span style="color:var(--p)">P ${r1(p.protein)}</span> · <span style="color:var(--c)">C ${r1(p.carbs)}</span> · <span style="color:var(--f)">F ${r1(p.fett)}</span>${p.portion?` · Portion ${esc(p.portion)}`:""}</div></div>`).join("");
+}
+
+document.getElementById("prev").onclick=()=>{cur=addDays(cur,-1);render()};
+document.getElementById("next").onclick=()=>{if(cur<today()){cur=addDays(cur,1);render()}};
+document.getElementById("dateBox").onclick=()=>{cur=today();render()};
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{view=b.dataset.v;render()});
+document.getElementById("q").oninput=renderProducts;
+let tx=null;
+document.addEventListener("touchstart",e=>{tx=e.touches[0].clientX},{passive:true});
+document.addEventListener("touchend",e=>{if(tx==null||view==="produkte")return;const dx=e.changedTouches[0].clientX-tx;tx=null;
+  if(Math.abs(dx)>70){if(dx>0){cur=addDays(cur,-1)}else if(cur<today()){cur=addDays(cur,1)}render()}},{passive:true});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)load()});
+load();
+</script>
+</body>
+</html>
